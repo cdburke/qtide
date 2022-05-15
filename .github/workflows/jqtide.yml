@@ -1,0 +1,42 @@
+name: JQtide
+
+on:
+ push:
+  branches:
+   - master
+
+permissions: write-all
+
+jobs:
+ jqtide:
+  name: JQtide
+  runs-on: ${{ matrix.os }}
+
+  strategy:
+   matrix:
+    include:
+      - os: ubuntu-20.04
+        version: 5.12.8
+
+  steps:
+   - name: Check Git repository
+     uses: actions/checkout@v2
+     with:
+      submodules: recursive
+
+   - name: Install Qt
+     if: runner.os == 'Linux'
+     run: script/installqt.sh ${{ matrix.version }}
+
+   - name: Compile JQtide (Linux)
+     if: runner.os == 'Linux'
+     run: script/makelinux.sh ${{ matrix.version }}
+
+   - name: Release JQtide (Linux)
+     if: runner.os == 'Linux'
+     uses: ncipollo/release-action@v1
+     with:
+       tag: build
+       artifacts: "jqt-linux.tar.gz"
+       token: ${{ secrets.GITHUB_TOKEN }}
+       allowUpdates: true
